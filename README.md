@@ -1,5 +1,6 @@
 # TicTacToe
 Tic Tac Toe game with a gist of machine learning
+Work in progress..
 
 In 1959, Arthur Samuel defined machine learning as a
 "Field of study that gives computers the ability to learn without being explicitly programmed".
