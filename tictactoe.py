@@ -4,12 +4,10 @@ import numpy as np
 class Game:
 	GameState = np.array([[0,0,0],[0,0,0],[0,0,0]])
 
-	def __init__(self,pname):
+	def __init__(self,pname,ptype):
 		self.pname = pname
+		self.ptype = ptype
 		self.state = np.array([[0,0,0],[0,0,0],[0,0,0]])
-
-	def getState(self):
-		return self.state
 
 	def makeMove(self,r,c):
 		if Game.GameState.item(r,c)==1:
@@ -27,6 +25,7 @@ class Game:
 		if np.sum(Game.GameState)==9:
 			return 2
 		return 0
+
 def display(state1,state2):
 	if os.name=='nt':
 			os.system('cls')
@@ -37,36 +36,62 @@ def display(state1,state2):
 	displayMat[state1==1] = 'X'
 	displayMat[state2==1] = 'O'
 	print displayMat
-def main(pname1='sujay',pname2='tars'):
-	player = [Game(pname1),Game(pname2)]
+
+def main(pname1='CPU1',pname2='CPU2'):
+	player = [Game(pname1,pname1=='CPU1'),Game(pname2,pname2=='CPU2')]
 	coorMap = {}
+	coorMapRev = {}
 	for i in range(3):
 		for j in range(3):
-			coorMap[3*i+j+1] = (i,j)
-	toggle = 0
+			coor = 3*i+j+1
+			coorMap[coor] = (i,j)
+			coorMapRev[(i,j)] = coor
+	turn = 0
+	turnNo = 0
+	GamePlay = np.zeros((9,9),np.uint8)
+	display(player[0].state,player[1].state)
+	
 	while True:
-		display(player[0].getState(),player[1].getState())
-		print 'player ',player[toggle].pname
-		coor = int(raw_input('enter your move coordinate from 1-9\n'))
-		[r,c] = coorMap[coor]
-		status = player[toggle].makeMove(r,c)
-		while status==-1:
-			print 'wrong move'
+
+		if player[turn].ptype==False:
+			print 'player ',player[turn].pname
 			coor = int(raw_input('enter your move coordinate from 1-9\n'))
 			[r,c] = coorMap[coor]
-			status = player[toggle].makeMove(r,c)
+			status = player[turn].makeMove(r,c)
+			while status==-1:
+				print 'wrong move'
+				coor = int(raw_input('enter your move coordinate from 1-9\n'))
+				[r,c] = coorMap[coor]
+				status = player[turn].makeMove(r,c)
+		else:
+			coor = np.random.randint(1,10)
+			[r,c] = coorMap[coor]
+			status = player[turn].makeMove(r,c)
+			while status==-1:
+				coor = np.random.randint(1,10)
+				[r,c] = coorMap[coor]
+				status = player[turn].makeMove(r,c)
+
+		GamePlay[turnNo:,coor-1] = turn+1
+		display(player[0].state,player[1].state)
+
 		if status==1:
-			print 'player ',player[toggle].pname,' is the winner'
+			print player[turn].pname,' is the winner'
 			break
 		elif status == 2:
 			print 'Game Draw'
 			break
-		toggle = toggle^1
 		
+		turn = turn^1
+		turnNo = turnNo+1
+
+	return status,GamePlay
+	
 if __name__=='__main__':
 	if len(sys.argv)==1:
-		main()
+		[status,GamePlay] = main()
 	elif len(sys.argv)==2:
-		main(sys.argv[1])
+		[status,GamePlay] = main(sys.argv[1])
 	elif len(sys.argv)==3:
-		main(sys.argv[1],sys.argv[2])
+		[status,GamePlay] = main(sys.argv[1],sys.argv[2])
+	
