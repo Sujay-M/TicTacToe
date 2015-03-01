@@ -1,60 +1,64 @@
 import sys
+import os
+import numpy as np
 class Game:
-	GameState = [[0,0,0],[0,0,0],[0,0,0]]
-	m = 3
+	GameState = np.array([[0,0,0],[0,0,0],[0,0,0]])
 
 	def __init__(self,pname):
 		self.pname = pname
-		self.state = [[0,0,0],[0,0,0],[0,0,0]]
+		self.state = np.array([[0,0,0],[0,0,0],[0,0,0]])
 
 	def getState(self):
 		return self.state
 
 	def makeMove(self,r,c):
-		if Game.GameState[r][c]!=0:
+		if Game.GameState.item(r,c)==1:
 			return -1
 		else:
-			Game.GameState[r][c] = 1
-			self.state[r][c] = 1
+			Game.GameState.itemset(r,c,1)
+			self.state.itemset(r,c,1)
 			return self.winCheck()
 	
 	def winCheck(self):
-		for i in range(self.m):
-			if sum(self.state[i])==3:
-				return 2
-			elif sum([row[i] for row in self.state])==3:
-				return 2
-		diag1 = 0
-		diag2 = 0
-		for i in range(self.m):
-			diag1 = diag1+self.state[i][i]
-			diag2 = diag2+self.state[i][self.m-i-1]
-		if diag1==3 or diag2==3:
+		if 3 in np.sum(self.state,axis=0) or 3 in np.sum(self.state,axis=1):
+			return 1
+		if np.sum(np.diag(np.fliplr(self.state)))==3 or np.sum(np.diag(self.state))==3:
+			return 1
+		if np.sum(Game.GameState)==9:
 			return 2
-		if sum([sum(row) for row in Game.GameState])==9:
-			return 3
 		return 0
-
+def display(state1,state2):
+	if os.name=='nt':
+			os.system('cls')
+	elif os.name=='posix':
+		os.system('clear')
+	displayMat = np.chararray((3, 3))
+	displayMat[:] = '-'
+	displayMat[state1==1] = 'X'
+	displayMat[state2==1] = 'O'
+	print displayMat
 def main(pname1='sujay',pname2='tars'):
 	player = [Game(pname1),Game(pname2)]
+	coorMap = {}
+	for i in range(3):
+		for j in range(3):
+			coorMap[3*i+j+1] = (i,j)
 	toggle = 0
 	while True:
+		display(player[0].getState(),player[1].getState())
 		print 'player ',player[toggle].pname
-		[r,c] = raw_input('enter your move r c').split()
-		r = int(r)
-		c = int(c)
+		coor = int(raw_input('enter your move coordinate from 1-9\n'))
+		[r,c] = coorMap[coor]
 		status = player[toggle].makeMove(r,c)
 		while status==-1:
 			print 'wrong move'
-			[r,c] = raw_input('enter your move r c').split()
-			r = int(r)
-			c = int(c)
+			coor = int(raw_input('enter your move coordinate from 1-9\n'))
+			[r,c] = coorMap[coor]
 			status = player[toggle].makeMove(r,c)
-		print 'status :',status
-		if status==2:
+		if status==1:
 			print 'player ',player[toggle].pname,' is the winner'
 			break
-		elif status == 3:
+		elif status == 2:
 			print 'Game Draw'
 			break
 		toggle = toggle^1
