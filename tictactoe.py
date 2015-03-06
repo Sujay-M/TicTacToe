@@ -1,14 +1,15 @@
 import sys
 import os
-import numpy as np
+import numpy as np 
 class Game:
-	GameState = np.array([[0,0,0],[0,0,0],[0,0,0]])
-
+	count = 0
 	def __init__(self,pname,ptype):
+		if Game.count==0:
+			Game.GameState = np.array([[0,0,0],[0,0,0],[0,0,0]])
 		self.pname = pname
 		self.ptype = ptype
 		self.state = np.array([[0,0,0],[0,0,0],[0,0,0]])
-
+		Game.count = Game.count+1
 	def makeMove(self,r,c):
 		if Game.GameState.item(r,c)==1:
 			return -1
@@ -25,6 +26,11 @@ class Game:
 		if np.sum(Game.GameState)==9:
 			return 2
 		return 0
+	def __del__(self):
+		Game.count = Game.count-1
+		if Game.count==0:
+			Game.GameState = None
+
 
 def display(state1,state2):
 	if os.name=='nt':
@@ -37,8 +43,8 @@ def display(state1,state2):
 	displayMat[state2==1] = 'O'
 	print displayMat
 
-def main(pname1='CPU1',pname2='CPU2'):
-	player = [Game(pname1,pname1=='CPU1'),Game(pname2,pname2=='CPU2')]
+def main(pname2='CPU1',pname1='CPU2'):
+	player = [Game(pname1,pname1=='CPU2'),Game(pname2,pname2=='CPU1')]
 	coorMap = {}
 	coorMapRev = {}
 	for i in range(3):
@@ -49,11 +55,10 @@ def main(pname1='CPU1',pname2='CPU2'):
 	turn = 0
 	turnNo = 0
 	GamePlay = np.zeros((9,9),np.uint8)
-	display(player[0].state,player[1].state)
-	
 	while True:
 
 		if player[turn].ptype==False:
+			display(player[0].state,player[1].state)
 			print 'player ',player[turn].pname
 			coor = int(raw_input('enter your move coordinate from 1-9\n'))
 			[r,c] = coorMap[coor]
@@ -63,7 +68,9 @@ def main(pname1='CPU1',pname2='CPU2'):
 				coor = int(raw_input('enter your move coordinate from 1-9\n'))
 				[r,c] = coorMap[coor]
 				status = player[turn].makeMove(r,c)
+			display(player[0].state,player[1].state)
 		else:
+			
 			coor = np.random.randint(1,10)
 			[r,c] = coorMap[coor]
 			status = player[turn].makeMove(r,c)
@@ -71,20 +78,20 @@ def main(pname1='CPU1',pname2='CPU2'):
 				coor = np.random.randint(1,10)
 				[r,c] = coorMap[coor]
 				status = player[turn].makeMove(r,c)
-
+			
 		GamePlay[turnNo:,coor-1] = turn+1
-		display(player[0].state,player[1].state)
-
 		if status==1:
 			print player[turn].pname,' is the winner'
+			status = turn^1 #if player 1 wins turn is 0 and we get the status as 1 otherwise 0
 			break
 		elif status == 2:
 			print 'Game Draw'
+			status = 0
 			break
 		
 		turn = turn^1
 		turnNo = turnNo+1
-
+	del player
 	return status,GamePlay
 	
 if __name__=='__main__':
